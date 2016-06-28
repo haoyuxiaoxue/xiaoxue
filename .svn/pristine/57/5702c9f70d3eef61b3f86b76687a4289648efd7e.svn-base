@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<robot name="new3s" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:property name="body_size" value="0.2 0.3 0.1"/>
+  <xacro:property name="wheel_length" value="0.05"/>
+  <xacro:property name="wheel_radius" value="0.05"/>
+  <xacro:property name="wheel1_pose" value="0.1 0.1 -0.025"/>
+  <xacro:property name="wheel2_pose" value="0.1 -0.1 -0.025"/>
+  <xacro:property name="wheel3_pose" value="-0.1 0.1 -0.025"/>
+  <xacro:property name="wheel4_pose" value="-0.1 -0.1 -0.025"/>
+
+  <xacro:macro name="wheel" params="wheelname position">
+    <link name="${wheelname}">
+      <visual>
+        <geometry>
+          <cylinder length="${wheel_length}" radius="${wheel_radius}"/>
+        </geometry>
+        <material name="black">
+          <color rgba="0 0 0 1"/>
+        </material>
+      </visual>
+    </link>
+
+    <joint name="base_to_${wheelname}" type="continuous">
+      <parent link="base_link"/>
+      <child  link="${wheelname}"/>
+      <origin rpy="0 1.57 0" xyz="${position}"/>
+      <axis xyz="0 0 1"/>
+      <limit effort="30" velocity="10"/>
+      <dynamics damping="0.2" friction="0.2"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:wheel wheelname="wheel_1" position="${wheel1_pose}"/>
+  <xacro:wheel wheelname="wheel_2" position="${wheel2_pose}"/>
+  <xacro:wheel wheelname="wheel_3" position="${wheel3_pose}"/>
+  <xacro:wheel wheelname="wheel_4" position="${wheel4_pose}"/>
+
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="${body_size}"/>
+      </geometry>
+      <material name="white">
+         <color rgba="1 1 0 0.6"/>
+      </material>
+    </visual>
+  </link>
+
+
+</robot>

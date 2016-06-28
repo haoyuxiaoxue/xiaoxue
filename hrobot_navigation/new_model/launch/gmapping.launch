@@ -1,0 +1,57 @@
+<launch>
+  <include file="$(find turtlebot_bringup)/launch/3dsensor.launch">
+    <arg name="rgb_processing" value="false" />
+    <arg name="depth_registration" value="false" />
+    <arg name="depth_processing" value="false" />
+    
+    <!-- We must specify an absolute topic name because if not it will be prefixed by "$(arg camera)".
+         Probably is a bug in the nodelet manager: https://github.com/ros/nodelet_core/issues/7 --> 
+    <arg name="scan_topic" value="/scan" />
+  </include>
+  <include file="$(find new_model)/launch/display.launch"/>
+  <!--node name="sicklms" pkg="sicktoolbox_wrapper" type="sicklms">
+    <param name="angle" type="int" value="45"/>
+    <param name="inverted" type="bool" value="true"/>
+  </node-->
+  <!--node pkg="rosserial_python" name="serial_node" type="serial_node.py" args="/dev/ttyACM0"/-->
+  <node pkg="tf" name="laser" type="static_transform_publisher" args="0 0 0 0 0 0 1 laser_base_link laser 100" />
+  <!--node pkg="tf" name="base_footprint" type="static_transform_publisher" args="0 0 0 0 0 0 1 base_footprint base_link 100" /-->
+  <node pkg="tf" name="dep" type="static_transform_publisher" args="0 0 0 0 0 0 1 base_link camera_depth_frame 100" />
+  <arg name="odom_frame_id"   default="odom"/>
+  <arg name="base_frame_id"   default="base_link"/>
+  <arg name="global_frame_id" default="map"/>
+  <arg name="odom_topic" default="odom" />
+  <arg name="laser_topic" default="scan" />
+  <!--include file="$(find new_model)/launch/amcl.launch"/-->
+  <arg name="node_name"             value="velocity_smoother"/>
+  <arg name="nodelet_manager_name"  value="nodelet_manager"/>
+  <arg name="config_file"           value="$(find new_model)/param/standalone.yaml"/>
+  <arg name="raw_cmd_vel_topic"     value="cmd_vel"/>
+  <arg name="smooth_cmd_vel_topic"  value="smooth_cmd_vel"/>
+  <arg name="robot_cmd_vel_topic"   value="new_car"/>
+  
+  <!-- nodelet manager -->
+  <node pkg="nodelet" type="nodelet" name="$(arg nodelet_manager_name)" args="manager"/>
+  
+  <!-- velocity smoother -->
+  <include file="$(find new_model)/launch/velocity_smoother.launch">
+    <arg name="node_name"             value="$(arg node_name)"/>
+    <arg name="nodelet_manager_name"  value="$(arg nodelet_manager_name)"/>
+    <arg name="config_file"           value="$(arg config_file)"/>
+    <arg name="raw_cmd_vel_topic"     value="$(arg raw_cmd_vel_topic)"/>
+    <arg name="smooth_cmd_vel_topic"  value="$(arg smooth_cmd_vel_topic)"/>
+    <arg name="robot_cmd_vel_topic"   value="$(arg robot_cmd_vel_topic)"/>
+    <arg name="odom_topic"            value="$(arg odom_topic)"/>
+  </include>
+  <include file="$(find new_model)/launch/gmapping.launch.xml"/>
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">   
+    <rosparam file="$(find new_model)/param/costmap_common_params.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find new_model)/param/costmap_common_params.yaml" command="load" ns="local_costmap" />   
+    <rosparam file="$(find new_model)/param/local_costmap_params.yaml" command="load" />   
+    <rosparam file="$(find new_model)/param/global_costmap_params.yaml" command="load" />
+    <rosparam file="$(find new_model)/param/dwa_local_planner_params.yaml" command="load" />
+    <rosparam file="$(find new_model)/param/move_base_params.yaml" command="load" />
+    <rosparam file="$(find new_model)/param/global_planner_params.yaml" command="load" />
+    <rosparam file="$(find new_model)/param/navfn_global_planner_params.yaml" command="load" />
+  </node>
+</launch>
